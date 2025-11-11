@@ -1,0 +1,7 @@
+bedrock-agentcore
+strands-agents
+pytest
+requests
+langgraph
+langchain-aws
+langchain-core

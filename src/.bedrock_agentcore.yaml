@@ -1,0 +1,48 @@
+default_agent: deep_research_scoping_agent
+agents:
+  deep_research_scoping_agent:
+    name: deep_research_scoping_agent
+    entrypoint: /workspaces/agent_core_deep_research/src/agent_core/scoping_agent_core.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: none
+    source_path: null
+    aws:
+      execution_role: arn:aws:iam::482387069690:role/AmazonBedrockAgentCoreSDKRuntime-us-west-2-a59a4561a2
+      execution_role_auto_create: false
+      account: '482387069690'
+      region: us-west-2
+      ecr_repository: 482387069690.dkr.ecr.us-west-2.amazonaws.com/bedrock-agentcore-deep_research_scoping_agent
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: deep_research_scoping_agent-kPi0Jr9jsH
+      agent_arn: arn:aws:bedrock-agentcore:us-west-2:482387069690:runtime/deep_research_scoping_agent-kPi0Jr9jsH
+      agent_session_id: 8732c3cd-b0e5-4ac6-a1b0-4b7399075ef0
+    codebuild:
+      project_name: bedrock-agentcore-deep_research_scoping_agent-builder
+      execution_role: arn:aws:iam::482387069690:role/AmazonBedrockAgentCoreSDKCodeBuild-us-west-2-a59a4561a2
+      source_bucket: bedrock-agentcore-codebuild-sources-482387069690-us-west-2
+    memory:
+      mode: NO_MEMORY
+      memory_id: null
+      memory_arn: null
+      memory_name: null
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+      was_created_by_toolkit: false
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null

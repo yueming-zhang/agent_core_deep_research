@@ -1,0 +1,28 @@
+{
+  "name": "agent_core_deep_research",
+  "build": {
+    "dockerfile": "../../Dockerfile"
+  },
+  "workspaceFolder": "/workspaces/agent_core_deep_research",
+  "mounts": [
+    "source=${localWorkspaceFolder}/../../shared,target=/workspaces/shared,type=bind"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}
