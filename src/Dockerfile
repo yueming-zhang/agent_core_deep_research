@@ -14,6 +14,9 @@ ENV UV_SYSTEM_PYTHON=1 \
 
 
 
+# Signal that this is running in Docker for host binding logic
+ENV DOCKER_CONTAINER=1
+
 # Install curl
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 

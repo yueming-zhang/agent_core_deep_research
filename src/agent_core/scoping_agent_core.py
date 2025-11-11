@@ -45,6 +45,7 @@ To run the app inside the docker container, use:
     
     start the container session 1:
         docker run -it -p 8080:8080 agent-core /bin/bash
+        docker run -it 482387069690.dkr.ecr.us-west-2.amazonaws.com/deep_research_scoping_agent /bin/bash
         python src/agent_core/scoping_agent_core.py
 
     start another terminal session 2:
