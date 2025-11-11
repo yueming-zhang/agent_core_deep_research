@@ -41,11 +41,11 @@ To test:
 
 
 To run the app inside the docker container, use:
-    docker build -t agent-core .
+    docker build -f src/Dockerfile -t agent-core .
     
     start the container session 1:
         docker run -it -p 8080:8080 agent-core /bin/bash
-        python scoping_agent_core.py
+        python src/agent_core/scoping_agent_core.py
 
     start another terminal session 2:
         docker ps

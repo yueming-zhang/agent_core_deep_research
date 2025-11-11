@@ -12,18 +12,16 @@ ENV UV_SYSTEM_PYTHON=1 \
 
 
 
-COPY agent_core/requirements.txt agent_core/requirements.txt
-# Install from requirements file
-RUN uv pip install -r agent_core/requirements.txt
 
-# Install curl for debugging/testing
+
+# Install curl
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 RUN uv pip install aws-opentelemetry-distro>=0.10.1
 
-
-# Signal that this is running in Docker for host binding logic
-ENV DOCKER_CONTAINER=1
+COPY pyproject.toml uv.lock ./
+COPY src ./src
+RUN uv pip install --no-cache -e .
 
 # Create non-root user
 RUN useradd -m -u 1000 bedrock_agentcore
@@ -33,9 +31,6 @@ EXPOSE 9000
 EXPOSE 8000
 EXPOSE 8080
 
-# Copy entire project (respecting .dockerignore)
-COPY . .
-
-# Use the full module path
+ENV PYTHONPATH="/app/src"
 
 CMD ["opentelemetry-instrument", "python", "-m", "agent_core.scoping_agent_core"]
