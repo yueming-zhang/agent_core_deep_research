@@ -29,3 +29,31 @@ def langgraph_bedrock(payload):
 
 if __name__ == "__main__":
     app.run()
+
+
+''' 
+To run the app as a server, use the command:
+    cd src/agent_core
+    python scoping_agent_core.py
+
+To test: 
+    curl -X POST http://localhost:8080/invocations   -H "Content-Type: application/json"   -d '{"prompt": "I want to research the best coffee shops in San Francisco.", "thread_id": "test-thread-2"}'   
+
+
+To run the app inside the docker container, use:
+    docker build -t agent-core .
+    
+    start the container session 1:
+        docker run -it -p 8080:8080 agent-core /bin/bash
+        python scoping_agent_core.py
+
+    start another terminal session 2:
+        docker ps
+        docker exec -it <container_id> /bin/bash
+        curl -X POST http://localhost:8080/invocations \
+            -H "Content-Type: application/json" \
+            -d '{"prompt": "I want to research the best coffee shops in San Francisco.", "thread_id": "test-thread-2"}'
+
+To test inside the docker container, use the same curl command as above.    
+
+'''
