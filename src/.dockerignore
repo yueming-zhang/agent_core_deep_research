@@ -14,10 +14,7 @@ __pycache__*
 
 # Virtual environments
 .venv/
-.env
 venv/
-env/
-ENV/
 
 # Testing
 .pytest_cache/

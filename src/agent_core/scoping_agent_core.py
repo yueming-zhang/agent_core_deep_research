@@ -1,19 +1,40 @@
 from pathlib import Path
 import sys
-import dotenv
+import boto3
 from langchain_core.messages import HumanMessage
 from bedrock_agentcore import BedrockAgentCoreApp
 from langgraph.checkpoint.memory import InMemorySaver
-dotenv.load_dotenv()
+import os
+import dotenv
+
+
+def load_env():
+    env_path = Path(__file__).parents[2] / '.env'
+    
+    if env_path.exists():
+        print(f"Loading environment from .env file: {env_path}")
+        dotenv.load_dotenv(env_path)
+    else:
+        print(f".env file not found, loading from AWS SSM Parameter Store")
+        keys = ["ANTHROPIC_API_KEY", "LANGSMITH_API_KEY", "LANGSMITH_PROJECT",
+                "LANGSMITH_TRACING", "OPENAI_API_KEY", "TAVILY_API_KEY"]
+        
+        client = boto3.client('ssm', region_name='us-west-2')
+        
+        for key in keys:
+            key_path = f'/deep_research_scoping_agent/{key}'
+            response = client.get_parameter(Name=key_path, WithDecryption=True)
+            os.environ[key] = response['Parameter']['Value']
+            print(f"{key} loaded from SSM")
+
+load_env()
 
 sys.path.append(str(Path(__file__).parents[1]))
 from deep_research.research_agent_scope import deep_researcher_builder
 
-
 app = BedrockAgentCoreApp()
 checkpointer = InMemorySaver()
 agent = deep_researcher_builder.compile(checkpointer=checkpointer)
-
 
 
 @app.entrypoint

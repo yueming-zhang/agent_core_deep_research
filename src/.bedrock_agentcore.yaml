@@ -30,7 +30,7 @@ agents:
     bedrock_agentcore:
       agent_id: deep_research_scoping_agent-kPi0Jr9jsH
       agent_arn: arn:aws:bedrock-agentcore:us-west-2:482387069690:runtime/deep_research_scoping_agent-kPi0Jr9jsH
-      agent_session_id: 44aaedba-ee86-4ad2-b98a-f2cd0d7b58e4
+      agent_session_id: b439b380-9960-475a-87a6-677a4764a6d8
     codebuild:
       project_name: bedrock-agentcore-deep_research_scoping_agent-builder
       execution_role: arn:aws:iam::482387069690:role/deep-research-codebuild-role-us-west-2
