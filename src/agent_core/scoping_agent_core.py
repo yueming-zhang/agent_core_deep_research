@@ -9,7 +9,7 @@ import dotenv
 
 
 def load_env():
-    env_path = Path(__file__).parents[2] / '.env'
+    env_path = Path(__file__).parents[1] / '.env'
     
     if env_path.exists():
         print(f"Loading environment from .env file: {env_path}")
@@ -67,6 +67,7 @@ To run the app inside the docker container, use:
     start the container session 1:
         docker run -it -p 8080:8080 agent-core /bin/bash
         docker run -it 482387069690.dkr.ecr.us-west-2.amazonaws.com/deep_research_scoping_agent /bin/bash
+                       482387069690.dkr.ecr.us-west-2.amazonaws.com/deep_research_scoping_agent:latest
         python src/agent_core/scoping_agent_core.py
 
     start another terminal session 2:

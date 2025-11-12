@@ -1,0 +1,20 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "a4e45cb1b9e0e3adf005f4937e2d7b847543e64681f28264a75f02c79341b378": {
+      "displayName": "DeepResearch Template",
+      "source": {
+        "path": "DeepResearch.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region-c8740ab3": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "a4e45cb1b9e0e3adf005f4937e2d7b847543e64681f28264a75f02c79341b378.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

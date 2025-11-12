@@ -1,0 +1,20 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "e2c36404a0260422c29b8fb8e717cb7a46c764038948cb995ee2a47c4e2d2598": {
+      "displayName": "DeepResearchScopingAgentStack Template",
+      "source": {
+        "path": "DeepResearchScopingAgentStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region-350d922b": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "e2c36404a0260422c29b8fb8e717cb7a46c764038948cb995ee2a47c4e2d2598.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}
