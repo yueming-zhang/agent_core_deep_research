@@ -4,14 +4,16 @@ import boto3
 from langchain_core.messages import HumanMessage
 from bedrock_agentcore import BedrockAgentCoreApp
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph_checkpoint_aws import AgentCoreMemorySaver
+
 import os
 import dotenv
 
 
 def load_env():
     env_path = Path(__file__).parents[1] / '.env'
-    
-    if env_path.exists():
+
+    if False and env_path.exists():
         print(f"Loading environment from .env file: {env_path}")
         dotenv.load_dotenv(env_path)
     else:
@@ -33,19 +35,28 @@ sys.path.append(str(Path(__file__).parents[1]))
 from deep_research.research_agent_scope import deep_researcher_builder
 
 app = BedrockAgentCoreApp()
-checkpointer = InMemorySaver()
-agent = deep_researcher_builder.compile(checkpointer=checkpointer)
+#checkpointer = InMemorySaver()
 
+agent = None
+try :
+    print("Initializing AgentCoreMemorySaver...")
+    #checkpointer = InMemorySaver()
+    checkpointer = AgentCoreMemorySaver("DeepResearchAgent-7gZmvrCKCl", region_name="us-west-2")
+    agent = deep_researcher_builder.compile(checkpointer=checkpointer)
+except Exception as e:
+    print("Error initializing AgentCoreMemorySaver:", e)
 
 @app.entrypoint
 def langgraph_bedrock(payload):
     user_input = payload.get("prompt")
     thread_id = payload.get("thread_id", "default")
+    actor_id = payload.get("actor_id", "default_actor")
     
     response = agent.invoke(
         {"messages": [HumanMessage(content=user_input)]},
-        config={"configurable": {"thread_id": thread_id}}
+        config={"configurable": {"thread_id": thread_id, "actor_id": actor_id}}
     )
+    print(f"invoked with actor_id: {actor_id}, thread_id: {thread_id}, prompt: {user_input}")
     return response
 
 if __name__ == "__main__":
@@ -59,6 +70,7 @@ To run the app as a server, use the command:
 
 To test: 
     curl -X POST http://localhost:8080/invocations   -H "Content-Type: application/json"   -d '{"prompt": "I want to research the best coffee shops in San Francisco.", "thread_id": "test-thread-2"}'   
+    curl -X POST http://localhost:8080/invocations   -H "Content-Type: application/json"   -d '{"prompt": "Let's focus on coffe quality.", "thread_id": "test-thread-2"}'   
 
 
 To run the app inside the docker container, use:

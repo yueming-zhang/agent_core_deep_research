@@ -1,16 +1,16 @@
 {
   "version": "48.0.0",
   "files": {
-    "a4e45cb1b9e0e3adf005f4937e2d7b847543e64681f28264a75f02c79341b378": {
+    "264a61eec46778b435be8fe964bb7ae9eb795fd15ebc0cdc756827954b57085a": {
       "displayName": "DeepResearch Template",
       "source": {
         "path": "DeepResearch.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "current_account-current_region-c8740ab3": {
+        "current_account-current_region-df746a23": {
           "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
-          "objectKey": "a4e45cb1b9e0e3adf005f4937e2d7b847543e64681f28264a75f02c79341b378.json",
+          "objectKey": "264a61eec46778b435be8fe964bb7ae9eb795fd15ebc0cdc756827954b57085a.json",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
         }
       }

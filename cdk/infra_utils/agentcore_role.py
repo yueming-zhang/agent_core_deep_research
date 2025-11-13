@@ -34,12 +34,22 @@ class AgentCoreRole(iam.Role):
                             effect=iam.Effect.ALLOW,
                             actions=[
                                 "logs:DescribeLogStreams",
-                                "logs:CreateLogGroup",
-                                "logs:DescribeLogGroups",
-                                "logs:CreateLogStream", 
-                                "logs:PutLogEvents"
+                                "logs:CreateLogGroup"
                             ],
                             resources=[f"arn:aws:logs:{region}:{account_id}:log-group:/aws/bedrock-agentcore/runtimes/*"]
+                        ),
+                        iam.PolicyStatement(
+                            effect=iam.Effect.ALLOW,
+                            actions=["logs:DescribeLogGroups"],
+                            resources=[f"arn:aws:logs:{region}:{account_id}:log-group:*"]
+                        ),
+                        iam.PolicyStatement(
+                            effect=iam.Effect.ALLOW,
+                            actions=[
+                                "logs:CreateLogStream",
+                                "logs:PutLogEvents"
+                            ],
+                            resources=[f"arn:aws:logs:{region}:{account_id}:log-group:/aws/bedrock-agentcore/runtimes/*:log-stream:*"]
                         ),
                         iam.PolicyStatement(
                             effect=iam.Effect.ALLOW,
@@ -85,6 +95,22 @@ class AgentCoreRole(iam.Role):
                                 "arn:aws:bedrock:*::foundation-model/*",
                                 f"arn:aws:bedrock:{region}:{account_id}:*"
                             ]
+                        ),
+                        iam.PolicyStatement(
+                            sid="AgentCoreMemoryFullAccess",
+                            effect=iam.Effect.ALLOW,
+                            actions=["bedrock-agentcore:*"],
+                            resources=["arn:aws:bedrock-agentcore:us-west-2:482387069690:memory/DeepResearchAgent-7gZmvrCKCl"]
+                        ),
+                        iam.PolicyStatement(
+                            sid="SSMParameterStoreRead",
+                            effect=iam.Effect.ALLOW,
+                            actions=[
+                                "ssm:GetParameter",
+                                "ssm:GetParameters",
+                                "ssm:GetParametersByPath"
+                            ],
+                            resources=[f"arn:aws:ssm:{region}:{account_id}:parameter/deep_research_scoping_agent/*"]
                         )
                     ]
                 )
