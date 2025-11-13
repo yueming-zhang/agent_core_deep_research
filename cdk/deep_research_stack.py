@@ -1,3 +1,7 @@
+# A minimal CDK stack to deploy an AWS Bedrock AgentCore runtime for a deep research agent (the first scoping agent)
+# 
+# This relies on: An existing ECR repository containing the container image for the agent
+
 from aws_cdk import (
     Stack,
     aws_ecr as ecr,
