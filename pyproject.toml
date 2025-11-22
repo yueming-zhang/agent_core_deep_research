@@ -26,6 +26,7 @@ dependencies = [
     "aws-cdk-lib>=2.223.0",
     "constructs>=10.4.3",
     "langgraph-checkpoint-aws>=1.0.1",
+    "fastapi>=0.121.3",
 ]
 
 [project.optional-dependencies]

@@ -11,6 +11,28 @@
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "remoteUser": "vscode",
+  "forwardPorts": [8501, 8080, 9090],
+
+  "portsAttributes": {
+    "8080": {
+      "label": "OAuth2 Callback Server 1",
+      "onAutoForward": "notify",
+      "visibility": "public",
+      "protocol": "https"
+    },
+    "9090": {
+      "label": "OAuth2 Callback Server",
+      "onAutoForward": "notify",
+      "visibility": "public",
+      "protocol": "https"
+    },
+    "8501": {
+      "label": "Streamlit App",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    }
+  },
+  
   "customizations": {
     "vscode": {
       "extensions": [
