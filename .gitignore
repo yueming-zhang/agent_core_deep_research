@@ -151,3 +151,7 @@ Thumbs.db
 # Project specific
 *.log
 .langgraph_cache/
+
+# OAuth2 credentials and tokens
+**/token.json
+**/google_cred.json
