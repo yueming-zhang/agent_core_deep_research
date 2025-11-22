@@ -5,14 +5,19 @@
   },
   "workspaceFolder": "/workspaces/agent_core_deep_research",
   "mounts": [
-    "source=${localWorkspaceFolder}/../../shared,target=/workspaces/shared,type=bind"
+    "source=${localWorkspaceFolder}/../../shared,target=/workspaces/shared,type=bind",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
   ],
+  "postCreateCommand": "chmod 700 /home/vscode/.ssh && chmod 600 /home/vscode/.ssh/id_* 2>/dev/null || true",
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "remoteUser": "vscode",
-  "forwardPorts": [8501, 8080, 9090],
-
+  "forwardPorts": [
+    8501,
+    8080,
+    9090
+  ],
   "portsAttributes": {
     "8080": {
       "label": "OAuth2 Callback Server 1",
@@ -32,7 +37,6 @@
       "visibility": "public"
     }
   },
-  
   "customizations": {
     "vscode": {
       "extensions": [
