@@ -51,6 +51,22 @@ def main() -> int:
         action="store_true",
         help="Wait for runtime to reach READY and print status transitions",
     )
+    parser.add_argument(
+        "--auto-update-on-conflict",
+        dest="auto_update_on_conflict",
+        action="store_true",
+        default=True,
+        help=(
+            "If the agent runtime already exists, update it instead of failing "
+            "(default: enabled)"
+        ),
+    )
+    parser.add_argument(
+        "--no-auto-update-on-conflict",
+        dest="auto_update_on_conflict",
+        action="store_false",
+        help="Disable update-on-conflict (will fail if the agent already exists)",
+    )
     args = parser.parse_args()
 
     session = Session()
@@ -72,7 +88,9 @@ def main() -> int:
     )
     print("Configured:", configure_result)
 
-    launch_result = agentcore_runtime.launch()
+    launch_result = agentcore_runtime.launch(
+        auto_update_on_conflict=args.auto_update_on_conflict
+    )
     print("Launched:")
     print("  agent_arn:", launch_result.agent_arn)
     print("  agent_id:", launch_result.agent_id)

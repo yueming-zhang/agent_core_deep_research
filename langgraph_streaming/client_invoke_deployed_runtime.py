@@ -22,7 +22,12 @@ import boto3
 
 
 def _json_dumps(obj: Any) -> str:
-    return json.dumps(obj, ensure_ascii=False)
+    return json.dumps(
+        obj,
+        ensure_ascii=False,
+        indent=2,
+        sort_keys=True,
+    )
 
 
 def _try_json_loads(text: str) -> Any:
@@ -135,7 +140,25 @@ def main() -> int:
         default="What is (10 + 5) * 3?",
         help="Prompt to send to the agent",
     )
-    parser.add_argument("--stream-mode", default="updates", choices=["updates", "values"])
+    parser.add_argument(
+        "--render-newlines",
+        action="store_true",
+        help=(
+            "After printing JSON, also print multiline string fields with real line breaks. "
+            "(JSON must escape newlines as \\n to stay valid.)"
+        ),
+    )
+    parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Enable SSE streaming (default: off / normal JSON response)",
+    )
+    parser.add_argument(
+        "--stream-mode",
+        default="updates",
+        choices=["updates", "values"],
+        help="Streaming mode (only used with --stream)",
+    )
     args = parser.parse_args()
 
     if not args.arn:
@@ -151,22 +174,49 @@ def main() -> int:
 
     client = boto3.client("bedrock-agentcore", region_name=args.region)
 
+    payload_obj: dict[str, Any] = {"prompt": args.prompt}
+    if args.stream:
+        payload_obj["stream"] = True
+        payload_obj["stream_mode"] = args.stream_mode
+
     resp = client.invoke_agent_runtime(
         agentRuntimeArn=args.arn,
         qualifier=args.qualifier,
-        payload=json.dumps({"prompt": args.prompt, "stream_mode": args.stream_mode}),
+        payload=json.dumps(payload_obj),
     )
 
     content_type = resp.get("contentType", "") or ""
     stream = resp.get("response")
 
+    def _maybe_render_multiline(obj: Any) -> None:
+        if not args.render_newlines:
+            return
+        if not isinstance(obj, dict):
+            return
+        for key, value in obj.items():
+            if isinstance(value, str) and "\n" in value:
+                print(f"\n--- {key} ---")
+                print(value)
+
     if stream is None:
         print(_json_dumps({"type": "error", "error": "No response stream in SDK output"}))
         return 2
 
-    # Most common case: StreamingBody with SSE
+    # Streaming case: StreamingBody with SSE
     if "text/event-stream" in content_type and hasattr(stream, "iter_lines"):
         _handle_sse_lines(stream)
+        return 0
+
+    # Non-streaming case: StreamingBody with JSON/text
+    if hasattr(stream, "read"):
+        raw = stream.read()
+        text = raw.decode("utf-8", errors="replace") if isinstance(raw, (bytes, bytearray)) else str(raw)
+        parsed = _try_json_loads(text)
+        if isinstance(parsed, dict):
+            print(_json_dumps(parsed))
+            _maybe_render_multiline(parsed)
+        else:
+            print(_json_dumps({"type": "data", "data": parsed}))
         return 0
 
     # Some SDKs return botocore.eventstream.EventStream (iterable of events)

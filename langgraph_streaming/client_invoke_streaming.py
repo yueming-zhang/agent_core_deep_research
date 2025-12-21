@@ -1,15 +1,21 @@
-"""Minimal client for streaming AgentCore SSE events.
+"""Minimal client for AgentCore invoke (normal or streaming).
 
 Usage:
   /workspaces/agent_core_deep_research/.venv/bin/python \
     langgraph_streaming/client_invoke_streaming.py \
     --prompt "What is (10 + 5) * 3?" \
-    --stream-mode updates
+        --stream
+
+Normal (default):
+    /workspaces/agent_core_deep_research/.venv/bin/python \
+        langgraph_streaming/client_invoke_streaming.py \
+        --prompt "What is (10 + 5) * 3?"
 
 Notes:
-- AgentCore streams Server-Sent Events (SSE).
+- Default behavior is a normal JSON response.
+- With `--stream`, AgentCore streams Server-Sent Events (SSE).
 - Each server `yield` becomes an SSE `data:` line.
-- This client reads lines, extracts `data: ...`, and JSON-decodes when possible.
+- Streaming mode reads lines, extracts `data: ...`, and JSON-decodes when possible.
 """
 
 from __future__ import annotations
@@ -56,11 +62,35 @@ def main() -> int:
         default="What is (10 + 5) * 3?",
         help="Prompt to send to the agent (default: a simple math question)",
     )
-    parser.add_argument("--stream-mode", default="updates", choices=["updates", "values"])
+    parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Enable SSE streaming (default: off / normal JSON response)",
+    )
+    parser.add_argument(
+        "--stream-mode",
+        default="updates",
+        choices=["updates", "values"],
+        help="Streaming mode (only used with --stream)",
+    )
     parser.add_argument("--timeout", type=float, default=60.0)
     args = parser.parse_args()
 
-    payload = {"prompt": args.prompt, "stream_mode": args.stream_mode}
+    payload: Dict[str, Any] = {"prompt": args.prompt}
+
+    if not args.stream:
+        resp = requests.post(args.url, json=payload, timeout=args.timeout)
+        resp.raise_for_status()
+        # Server returns JSON; fall back to raw text if not JSON.
+        try:
+            data = resp.json()
+        except ValueError:
+            data = {"type": "data", "data": resp.text}
+        print(json.dumps(data, ensure_ascii=False))
+        return 0
+
+    payload["stream"] = True
+    payload["stream_mode"] = args.stream_mode
 
     with requests.post(
         args.url,
@@ -80,8 +110,6 @@ def main() -> int:
 
             event = _parse_sse_data_line(line)
             if event is None:
-                # Uncomment if you want to see non-data SSE fields.
-                # print(f"[sse] {line}")
                 continue
 
             print(json.dumps(event, ensure_ascii=False))

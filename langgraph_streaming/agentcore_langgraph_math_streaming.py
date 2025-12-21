@@ -29,25 +29,51 @@ if str(_repo_root) not in sys.path:
   sys.path.insert(0, str(_repo_root))
 
 # Import the graph streaming helper (server-side adaptor)
-from langgraph_streaming.worker_evaluator_math_agent import answer_math_question_streaming
+from langgraph_streaming.worker_evaluator_math_agent import (
+  answer_math_question,
+  answer_math_question_streaming,
+)
 
 app = BedrockAgentCoreApp()
 
 
+async def _invoke_stream(payload: dict[str, Any]):
+  """Stream LangGraph step events as SSE chunks."""
+
+  user_input = payload.get("prompt", "")
+  stream_mode = payload.get("stream_mode", "updates")  # "updates" | "values"
+
+  try:
+    for event in answer_math_question_streaming(user_input, stream_mode=stream_mode):
+      yield event
+  except Exception as e:
+    yield {"type": "stream_error", "error": str(e)}
+
+
 @app.entrypoint
 async def invoke(payload: dict[str, Any]):
-    """AgentCore entrypoint that streams LangGraph step events."""
+  """AgentCore entrypoint.
 
-    user_input = payload.get("prompt", "")
-    stream_mode = payload.get("stream_mode", "updates")  # "updates" | "values"
+  Default: normal (non-streaming) JSON response.
+  Streaming: set `{"stream": true}` in the payload to receive SSE.
+  """
 
-    try:
-        for event in answer_math_question_streaming(user_input, stream_mode=stream_mode):
-            # `event` is a dict (JSON-safe in values-mode; mostly JSON-safe in updates-mode)
-            yield event
-    except Exception as e:
-        # Errors should still be streamed so the client can render them.
-        yield {"type": "stream_error", "error": str(e)}
+  # Default to normal invoke. Streaming is opt-in.
+  want_stream = bool(payload.get("stream") or payload.get("streaming"))
+  if want_stream:
+    return _invoke_stream(payload)
+
+  user_input = payload.get("prompt", "")
+  try:
+    result = answer_math_question(user_input)
+    final_answer = result.get("final_answer") or result.get("worker_output") or ""
+    return {
+      "result": final_answer,
+      "worker_output": result.get("worker_output", ""),
+      "evaluation_result": result.get("evaluation_result", ""),
+    }
+  except Exception as e:
+    return {"type": "error", "error": str(e)}
 
 
 if __name__ == "__main__":

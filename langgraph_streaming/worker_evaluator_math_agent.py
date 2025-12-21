@@ -255,12 +255,17 @@ def answer_math_question(question: str) -> dict:
         "evaluation_result": ""
     })
     
+    worker_output = result.get("worker_output", "")
+    # The graph ends after the evaluator node, so the last message is typically the evaluator.
+    # For a user-facing final answer, prefer the worker's final output.
+    final_answer = worker_output or (result["messages"][-1].content if result["messages"] else "")
+
     return {
         "question": question,
         "messages": result["messages"],
-        "worker_output": result.get("worker_output", ""),
+        "worker_output": worker_output,
         "evaluation_result": result.get("evaluation_result", ""),
-        "final_answer": result["messages"][-1].content if result["messages"] else ""
+        "final_answer": final_answer,
     }
 
 
