@@ -6,9 +6,10 @@
   "workspaceFolder": "/workspaces/agent_core_deep_research",
   "mounts": [
     "source=${localWorkspaceFolder}/../../shared,target=/workspaces/shared,type=bind",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind,consistency=cached"
   ],
-  "postCreateCommand": "chmod 700 /home/vscode/.ssh && chmod 600 /home/vscode/.ssh/id_* 2>/dev/null || true",
+  "postCreateCommand": "chmod 700 /home/vscode/.ssh && chmod 600 /home/vscode/.ssh/id_* 2>/dev/null || true && chmod 700 /home/vscode/.aws 2>/dev/null || true",
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
