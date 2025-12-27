@@ -14,7 +14,7 @@ from streamable_http_sigv4 import SigV4HTTPXAuth
 
 
 # Config
-AGENTCORE_MCP_URL = "https://bedrock-agentcore.us-west-2.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-west-2%3A482387069690%3Aruntime%2Fmcp_server_iam-feB19o2eBk/invocations?qualifier=DEFAULT"
+AGENTCORE_MCP_URL = "https://bedrock-agentcore.us-west-2.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-west-2%3A482387069690%3Aruntime%2Fmcp_server_iam-rgCYhOFeIC/invocations?qualifier=DEFAULT"
 REGION = "us-west-2"
 
 

@@ -48,3 +48,51 @@ For demonstration purposes, we will use a very simple MCP server with 3 tools: `
 ### Tutorial Key Features
 
 * Hosting MCP Server
+
+
+# Deploy MCP to VPC
+Below endpoints are required if deploy MCP (or any agentcore runtime) to VPC
+
+## Bedrock Runtime endpoint
+aws ec2 create-vpc-endpoint \
+    --vpc-id vpc-0fee0411bd15a610c \
+    --service-name com.amazonaws.us-west-2.bedrock-runtime \
+    --vpc-endpoint-type Interface \
+    --subnet-ids subnet-0dff4845b461e14cd subnet-019320fdd46cde00a \
+    --security-group-ids sg-0f40ce05eff09274d \
+    --region us-west-2
+
+## ECR API endpoint
+aws ec2 create-vpc-endpoint \
+    --vpc-id vpc-0fee0411bd15a610c \
+    --service-name com.amazonaws.us-west-2.ecr.api \
+    --vpc-endpoint-type Interface \
+    --subnet-ids subnet-0dff4845b461e14cd subnet-019320fdd46cde00a \
+    --security-group-ids sg-0f40ce05eff09274d \
+    --region us-west-2
+
+## ECR DKR endpoint  
+aws ec2 create-vpc-endpoint \
+    --vpc-id vpc-0fee0411bd15a610c \
+    --service-name com.amazonaws.us-west-2.ecr.dkr \
+    --vpc-endpoint-type Interface \
+    --subnet-ids subnet-0dff4845b461e14cd subnet-019320fdd46cde00a \
+    --security-group-ids sg-0f40ce05eff09274d \
+    --region us-west-2
+
+## S3 Gateway endpoint (free, no subnet needed)
+aws ec2 create-vpc-endpoint \
+    --vpc-id vpc-0fee0411bd15a610c \
+    --service-name com.amazonaws.us-west-2.s3 \
+    --vpc-endpoint-type Gateway \
+    --route-table-ids rtb-03c1986aa88a753e1 \
+    --region us-west-2
+
+## CloudWatch Logs endpoint
+aws ec2 create-vpc-endpoint \
+    --vpc-id vpc-0fee0411bd15a610c \
+    --service-name com.amazonaws.us-west-2.logs \
+    --vpc-endpoint-type Interface \
+    --subnet-ids subnet-0dff4845b461e14cd subnet-019320fdd46cde00a \
+    --security-group-ids sg-0f40ce05eff09274d \
+    --region us-west-2
