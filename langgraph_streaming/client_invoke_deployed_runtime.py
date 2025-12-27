@@ -149,15 +149,10 @@ def main() -> int:
         ),
     )
     parser.add_argument(
-        "--stream",
-        action="store_true",
-        help="Enable SSE streaming (default: off / normal JSON response)",
-    )
-    parser.add_argument(
         "--stream-mode",
         default="updates",
         choices=["updates", "values"],
-        help="Streaming mode (only used with --stream)",
+        help="Streaming mode",
     )
     args = parser.parse_args()
 
@@ -174,10 +169,11 @@ def main() -> int:
 
     client = boto3.client("bedrock-agentcore", region_name=args.region)
 
-    payload_obj: dict[str, Any] = {"prompt": args.prompt}
-    if args.stream:
-        payload_obj["stream"] = True
-        payload_obj["stream_mode"] = args.stream_mode
+    payload_obj: dict[str, Any] = {
+        "prompt": args.prompt,
+        "stream": True,
+        "stream_mode": args.stream_mode,
+    }
 
     resp = client.invoke_agent_runtime(
         agentRuntimeArn=args.arn,
