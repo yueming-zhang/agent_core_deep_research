@@ -12,9 +12,9 @@ ENV UV_SYSTEM_PYTHON=1 \
 
 
 
-COPY langgraph_streaming/requirements.runtime.txt langgraph_streaming/requirements.runtime.txt
+COPY requirements.runtime.txt requirements.runtime.txt
 # Install from requirements file
-RUN uv pip install -r langgraph_streaming/requirements.runtime.txt
+RUN uv pip install -r requirements.runtime.txt
 
 
 
@@ -38,4 +38,4 @@ COPY . .
 
 # Use the full module path
 
-CMD ["opentelemetry-instrument", "python", "-m", "langgraph_streaming.agentcore_langgraph_math_streaming"]
+CMD ["opentelemetry-instrument", "python", "-m", "MultiServerMCPClient.agentcore_remote_agent"]
