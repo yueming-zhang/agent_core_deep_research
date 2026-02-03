@@ -7,6 +7,7 @@ import boto3
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_aws import ChatBedrock
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.graph import StateGraph, MessagesState, START, END
 
 # Import the SigV4 auth class from the existing module
@@ -96,31 +97,35 @@ async def main():
         # "weather": {
         #     "transport": "http",
         #     "url": "http://localhost:8000/mcp",
-        # },
+        # },ß
     })
     
-    # Get tools from all MCP servers
-    tools = await client.get_tools()
-    print(f"\n📋 Loaded {len(tools)} tools: {[t.name for t in tools]}")
-    
-    # Create agent
-    agent = create_agent(tools)
-    
-    # Test prompts
-    prompts = [
-        "What is 15 + 27?",
-        "Multiply 6 and 8",
-        "Say hello to Bob",
-    ]
-    
-    for prompt in prompts:
-        print(f"\n{'='*60}")
-        print(f"🧑 User: {prompt}")
-        print("-" * 40)
-        
-        result = await agent.ainvoke({"messages": [HumanMessage(content=prompt)]})
-        final_response = result["messages"][-1].content
-        print(f"🤖 Agent: {final_response}")
+    # Reuse a single MCP session for tool loading + all tool calls
+    async with client.session("agentcore") as session:
+        tools = await load_mcp_tools(
+            session,
+            callbacks=client.callbacks,
+            tool_interceptors=client.tool_interceptors,
+            server_name="agentcore",
+        )
+        print(f"\n📋 Loaded {len(tools)} tools: {[t.name for t in tools]}")
+
+        agent = create_agent(tools)
+
+        prompts = [
+            "What is 15 + 27?",
+            "Multiply 6 and 8",
+            "Say hello to Bob",
+        ]
+
+        for prompt in prompts:
+            print(f"\n{'='*60}")
+            print(f"🧑 User: {prompt}")
+            print("-" * 40)
+
+            result = await agent.ainvoke({"messages": [HumanMessage(content=prompt)]})
+            final_response = result["messages"][-1].content
+            print(f"🤖 Agent: {final_response}")
 
 
 if __name__ == "__main__":
