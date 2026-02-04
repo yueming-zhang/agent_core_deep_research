@@ -155,3 +155,21 @@ Thumbs.db
 # OAuth2 credentials and tokens
 **/token.json
 **/google_cred.json
+
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/.terraform.tfstate.lock.info
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/terraform.tfstate.d/
+**/crash.log
+**/crash.*.log
+**/*.tfplan
+**/tfplan
+**/override.tf
+**/override.tf.json
+**/*_override.tf
+**/*_override.tf.json
+**/.terraformrc
+**/terraform.rc
