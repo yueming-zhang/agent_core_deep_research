@@ -68,3 +68,10 @@ if __name__ == "__main__":
 
 #python invoke_mcp_parallel.py --operation add_numbers --thread-count 2
 #python invoke_mcp_parallel.py --operation multiply_numbers --thread-count 2
+
+
+#----------
+# 10 thread -> 1 session, 22 invocations
+# 20 thread -> 1 session, 42 invocations
+# 5 thread -> 1 session, 12 invocations
+# 1 thread -> 1 session, 4 invocations

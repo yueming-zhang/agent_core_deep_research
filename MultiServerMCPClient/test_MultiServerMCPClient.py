@@ -3,6 +3,8 @@ LangGraph agent using MultiServerMCPClient with AWS SigV4 authentication.
 """
 
 import asyncio
+import sys
+import uuid
 import boto3
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_aws import ChatBedrock
@@ -14,8 +16,13 @@ from langgraph.graph import StateGraph, MessagesState, START, END
 from streamable_http_sigv4 import SigV4HTTPXAuth
 
 
-# Config
-AGENTCORE_MCP_URL = "https://bedrock-agentcore.us-west-2.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-west-2%3A482387069690%3Aruntime%2Fmcp_server_iam-rgCYhOFeIC/invocations?qualifier=DEFAULT"
+region = "us-west-2"
+ssm_client = boto3.client("ssm", region_name=region)
+agent_arn_response = ssm_client.get_parameter(Name="/mcp_server/runtime_iam/agent_arn")
+agent_arn = agent_arn_response["Parameter"]["Value"]
+encoded_arn = agent_arn.replace(":", "%3A").replace("/", "%2F")
+AGENTCORE_MCP_URL = f"https://bedrock-agentcore.{region}.amazonaws.com/runtimes/{encoded_arn}/invocations?qualifier=DEFAULT"
+
 REGION = "us-west-2"
 
 
@@ -80,43 +87,17 @@ def create_agent(tools):
     return graph.compile()
 
 
-async def main():
-    print("=" * 60)
-    print("LangGraph Agent with MultiServerMCPClient + SigV4 Auth")
-    print("=" * 60)
-    
-    # Create MultiServerMCPClient with SigV4 auth
-    client = MultiServerMCPClient({
-        "agentcore": {
-            "transport": "streamable_http",
-            "url": AGENTCORE_MCP_URL,
-            "auth": create_sigv4_auth(),  # Pass SigV4 auth handler
-            "terminate_on_close": False,
-        },
-        # Add other MCP servers here:
-        # "weather": {
-        #     "transport": "http",
-        #     "url": "http://localhost:8000/mcp",
-        # },ß
-    })
-    
-    # Reuse a single MCP session for tool loading + all tool calls
-    async with client.session("agentcore") as session:
+async def run_agent_with_prompts_single_session(client: MultiServerMCPClient, prompts: list[str], server_name: str = "agentcore"):
+    async with client.session(server_name) as session:
         tools = await load_mcp_tools(
             session,
             callbacks=client.callbacks,
             tool_interceptors=client.tool_interceptors,
-            server_name="agentcore",
+            server_name=server_name,
         )
         print(f"\n📋 Loaded {len(tools)} tools: {[t.name for t in tools]}")
 
         agent = create_agent(tools)
-
-        prompts = [
-            "What is 15 + 27?",
-            "Multiply 6 and 8",
-            "Say hello to Bob",
-        ]
 
         for prompt in prompts:
             print(f"\n{'='*60}")
@@ -126,6 +107,50 @@ async def main():
             result = await agent.ainvoke({"messages": [HumanMessage(content=prompt)]})
             final_response = result["messages"][-1].content
             print(f"🤖 Agent: {final_response}")
+
+async def run_agent_without_session(client: MultiServerMCPClient, prompts: list[str]):
+
+    tools = await client.get_tools()
+    print(f"\n📋 Loaded {len(tools)} tools: {[t.name for t in tools]}")
+
+    agent = create_agent(tools)
+
+    for prompt in prompts:
+        print(f"\n{'='*60}")
+        print(f"🧑 User: {prompt}")
+        print("-" * 40)
+
+        result = await agent.ainvoke({"messages": [HumanMessage(content=prompt)]})
+        final_response = result["messages"][-1].content
+        print(f"🤖 Agent: {final_response}")
+
+async def main():
+    session_id = str(uuid.uuid4())
+    client = MultiServerMCPClient({
+        "agentcore": {
+            "transport": "streamable_http",
+            "url": AGENTCORE_MCP_URL,
+            "auth": create_sigv4_auth(),  # Pass SigV4 auth handler
+            "terminate_on_close": False,
+            "headers": {
+                "Mcp-Session-Id": session_id,  # Force all tool calls to use same session
+            },
+        },
+        # Add other MCP servers here:
+        # "weather": {
+        #     "transport": "http",
+        #     "url": "http://localhost:8000/mcp",
+        # },
+    })
+    
+    prompts = [
+        "What is 15 + 27?",
+        "Multiply 6 and 8",
+        "Say hello to Bob",
+    ]
+    
+    # await run_agent_with_prompts_single_session(client, prompts)
+    await run_agent_without_session(client, prompts)
 
 
 if __name__ == "__main__":
