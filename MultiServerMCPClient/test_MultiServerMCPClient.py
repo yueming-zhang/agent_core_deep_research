@@ -3,9 +3,11 @@ LangGraph agent using MultiServerMCPClient with AWS SigV4 authentication.
 """
 
 import asyncio
+import datetime
 import sys
 import uuid
 import boto3
+from contextlib import AsyncExitStack
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_aws import ChatBedrock
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -87,13 +89,13 @@ def create_agent(tools):
     return graph.compile()
 
 
-async def run_agent_with_prompts_single_session(client: MultiServerMCPClient, prompts: list[str], server_name: str = "agentcore"):
-    async with client.session(server_name) as session:
+async def run_agent_with_prompts_single_session(client: MultiServerMCPClient, prompts: list[str]):
+    async with client.session(server_name="agentcore1") as session:
         tools = await load_mcp_tools(
             session,
             callbacks=client.callbacks,
             tool_interceptors=client.tool_interceptors,
-            server_name=server_name,
+            server_name="agentcore1",
         )
         print(f"\n📋 Loaded {len(tools)} tools: {[t.name for t in tools]}")
 
@@ -124,17 +126,61 @@ async def run_agent_without_session(client: MultiServerMCPClient, prompts: list[
         final_response = result["messages"][-1].content
         print(f"🤖 Agent: {final_response}")
 
+async def run_agent_with_prompts_multi_server(client: MultiServerMCPClient, prompts: list[str]):
+    """
+    Run agent with explicit session management for all configured servers.
+    This is the most efficient approach per session_behavior_analysis.md:
+    - Uses explicit sessions (not headers)
+    - Minimizes invocations (~6 vs ~15)
+    - All servers maintain their sessions throughout execution
+    """
+    server_names = list(client.connections.keys())
+    print(f"\n🌐 Opening explicit sessions for {len(server_names)} servers: {server_names}")
+    
+    # Use AsyncExitStack to manage multiple session contexts simultaneously
+    async with AsyncExitStack() as stack:
+        all_tools = []
+        
+        # Open an explicit session for each server - most efficient approach
+        for server_name in server_names:
+            print(f"   🔌 Connecting to '{server_name}'...")
+            session = await stack.enter_async_context(client.session(server_name=server_name))
+            tools = await load_mcp_tools(
+                session,
+                callbacks=client.callbacks,
+                tool_interceptors=client.tool_interceptors,
+                server_name=server_name,
+            )
+            print(f"   ✅ Loaded {len(tools)} tools from '{server_name}': {[t.name for t in tools]}")
+            all_tools.extend(tools)
+        
+        print(f"\n📋 Total tools loaded: {len(all_tools)}")
+        print("📌 All sessions are now active and will remain open for all prompts")
+
+        agent = create_agent(all_tools)
+
+        # Execute all prompts with sessions maintained throughout
+        for prompt in prompts:
+            print(f"\n{'='*60}")
+            print(f"🧑 User: {prompt}")
+            print("-" * 40)
+
+            result = await agent.ainvoke({"messages": [HumanMessage(content=prompt)]})
+            final_response = result["messages"][-1].content
+            print(f"🤖 Agent: {final_response}")
+        
+        print(f"\n🏁 All prompts completed. Sessions will now close.")
+
 async def main():
-    session_id = str(uuid.uuid4())
+    # Using explicit session management - no need for session headers
+    # This approach gives the best performance per session_behavior_analysis.md
     client = MultiServerMCPClient({
-        "agentcore": {
+        "agentcore1": {
             "transport": "streamable_http",
             "url": AGENTCORE_MCP_URL,
-            "auth": create_sigv4_auth(),  # Pass SigV4 auth handler
+            "auth": create_sigv4_auth(),
             "terminate_on_close": False,
-            "headers": {
-                "Mcp-Session-Id": session_id,  # Force all tool calls to use same session
-            },
+            # Note: No Mcp-Session-Id header needed with explicit session management
         },
         # Add other MCP servers here:
         # "weather": {
@@ -149,8 +195,12 @@ async def main():
         "Say hello to Bob",
     ]
     
-    # await run_agent_with_prompts_single_session(client, prompts)
-    await run_agent_without_session(client, prompts)
+    # Use multi-server with explicit session management (most efficient)
+    await run_agent_with_prompts_multi_server(client, prompts)
+    
+    # Alternative approaches for comparison:
+    # await run_agent_with_prompts_single_session(client, prompts)  # Single server only
+    # await run_agent_without_session(client, prompts)  # Less efficient: ~15 invocations
 
 
 if __name__ == "__main__":
