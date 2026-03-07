@@ -13,6 +13,7 @@ from langchain_aws import ChatBedrock
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.graph import StateGraph, MessagesState, START, END
+from tool_proxy import ToolProxyLayer  # Import the proxy layer for logging and caching
 
 # Import the SigV4 auth class from the existing module
 from streamable_http_sigv4 import SigV4HTTPXAuth
@@ -91,13 +92,17 @@ def create_agent(tools):
 
 async def run_agent_with_prompts_single_session(client: MultiServerMCPClient, prompts: list[str]):
     async with client.session(server_name="agentcore1") as session:
-        tools = await load_mcp_tools(
+        raw_tools = await load_mcp_tools(
             session,
             callbacks=client.callbacks,
             tool_interceptors=client.tool_interceptors,
             server_name="agentcore1",
         )
-        print(f"\n📋 Loaded {len(tools)} tools: {[t.name for t in tools]}")
+        print(f"\n📋 Loaded {len(raw_tools)} tools: {[t.name for t in raw_tools]}")
+
+        # Wrap tools with proxy layer for logging and caching
+        proxy_layer = ToolProxyLayer()
+        tools = proxy_layer.wrap_tools(raw_tools)
 
         agent = create_agent(tools)
 
@@ -112,9 +117,12 @@ async def run_agent_with_prompts_single_session(client: MultiServerMCPClient, pr
 
 async def run_agent_without_session(client: MultiServerMCPClient, prompts: list[str]):
 
-    tools = await client.get_tools()
-    print(f"\n📋 Loaded {len(tools)} tools: {[t.name for t in tools]}")
+    raw_tools = await client.get_tools()
+    print(f"\n📋 Loaded {len(raw_tools)} tools: {[t.name for t in raw_tools]}")
 
+    # Wrap tools with proxy layer for logging and caching
+    proxy_layer = ToolProxyLayer()
+    tools = proxy_layer.wrap_tools(raw_tools)
     agent = create_agent(tools)
 
     for prompt in prompts:
@@ -191,15 +199,16 @@ async def main():
     
     prompts = [
         "What is 15 + 27?",
+        "What is 15 + 27?",
         "Multiply 6 and 8",
         "Say hello to Bob",
     ]
     
     # Use multi-server with explicit session management (most efficient)
-    await run_agent_with_prompts_multi_server(client, prompts)
+    # await run_agent_with_prompts_multi_server(client, prompts)
     
     # Alternative approaches for comparison:
-    # await run_agent_with_prompts_single_session(client, prompts)  # Single server only
+    await run_agent_with_prompts_single_session(client, prompts)  # Single server only
     # await run_agent_without_session(client, prompts)  # Less efficient: ~15 invocations
 
 

@@ -173,3 +173,11 @@ Thumbs.db
 **/*_override.tf.json
 **/.terraformrc
 **/terraform.rc
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
