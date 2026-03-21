@@ -13,6 +13,14 @@
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
+  "containerEnv": {
+    "CLAUDE_CODE_USE_BEDROCK": "1",
+    "AWS_REGION": "us-west-2",
+    "AWS_PROFILE": "default",
+    // Pin model to avoid breakage when new versions release
+    "ANTHROPIC_MODEL": "anthropic.claude-opus-4-6-v1",
+    "ANTHROPIC_SMALL_FAST_MODEL": "anthropic.claude-haiku-4-5-20251001-v1:0"
+  },
   "remoteUser": "vscode",
   "forwardPorts": [
     8501,
